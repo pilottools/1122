@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow">
+<meta name="google" content="notranslate">
+<title>One Pilot Bookmark</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+
+  body { --bg: #fff; --bg2: #f9fafb; --bg3: #f3f4f6; --border: #e5e7eb; --text: #374151; --text2: #111827; --text3: #6b7280; --card-shadow: 0 30px 25px rgba(0,0,0,0.12); --input-border: #d1d5db; }
+  body.mode-dark { --bg: #111827; --bg2: #1f2937; --bg3: #374151; --border: #374151; --text: #d1d5db; --text2: #f9fafb; --text3: #9ca3af; --card-shadow: 0 4px 24px rgba(0,0,0,0.4); --input-border: #4b5563; }
+  body.mode-gray { --bg: #e5e7eb; --bg2: #d1d5db; --bg3: #c1c9d2; --border: #9ca3af; --text: #374151; --text2: #111827; --text3: #6b7280; --card-shadow: 0 20px 40px rgba(0,0,0,0.08); --input-border: #9ca3af; }
+
+  body { background: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
+  .app-container, .modal, .ai-brain-drawer, .ai-brain-msgs, .ai-input-box, #tabContextMenu { background: var(--bg) !important; color: var(--text) !important; transition: background 0.3s; }
+  .bookmark-card { background: var(--bg2) !important; box-shadow: var(--card-shadow) !important; }
+  .bookmark-icon { background: var(--bg3) !important; }
+  .bookmark-name, header.bookmarks-header h2 { color: var(--text2) !important; }
+  input[type="text"], input[type="url"], input[type="search"] { background: var(--bg2) !important; color: var(--text2) !important; border-color: var(--input-border) !important; }
+  .tabs-container { border-bottom-color: var(--border) !important; }
+  .tab-item { color: var(--text3) !important; }
+  .tab-item.active { color: #4f46e5 !important; }
+  label { color: var(--text3) !important; }
+  .add-tab-btn { background: var(--bg3) !important; color: var(--text) !important; }
+  .ai-msg { background: var(--bg2) !important; border-color: var(--border) !important; color: var(--text) !important; }
+  .modal { background: var(--bg) !important; }
+  .tab-locked-screen h3 { color: var(--text2) !important; }
+  .tab-locked-screen p { color: var(--text3) !important; }
+  .tab-unlock-form input { background: var(--bg2) !important; color: var(--text2) !important; border-color: var(--input-border) !important; }
+  .lock-big-icon { background: var(--bg3) !important; }
+  .bookmark-context-menu { background: var(--bg2) !important; }
+  .bookmark-context-menu button { color: var(--text3) !important; }
+
+  .bookmark-card.search-match {
+    border: 2px solid #6366f1 !important;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.18), 0 8px 24px rgba(99,102,241,0.15) !important;
+  }
+  .bookmark-card.search-match.bm-locked {
+    border: 2px solid #f59e0b !important;
+    box-shadow: 0 0 0 4px rgba(245,158,11,0.18), 0 8px 24px rgba(245,158,11,0.15) !important;
+  }
+
+  .sticky-header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg); padding: 16px 24px 0;
+    margin: 0 -24px; transition: background 0.3s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  #modeSwitcher { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 50px; padding: 6px 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: background 0.3s; }
+  .mode-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .mode-btn:hover { transform: scale(1.15); }
+  .mode-btn.active-mode { border-color: #6366f1; box-shadow: 0 0 0 2px #6366f133; }
+  .mode-btn.m-white { background: #ffffff; }
+  .mode-btn.m-gray  { background: #9ca3af; }
+  .mode-btn.m-dark  { background: #1f2937; }
+
+  body {
+    margin: 0; padding: 0; overflow-y: scroll;
+    font-family: Arial, Helvetica, 'Segoe UI', sans-serif !important;
+    user-select: none; -webkit-font-smoothing: antialiased;
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+  .app-container { max-width: 1250px; width: 100%; margin: 32px auto 16px; padding: 0 24px; flex: 1; }
+
+  header.bookmarks-header {
+    display: flex; flex-wrap: nowrap; gap: 16px 24px;
+    align-items: flex-end; justify-content: space-between; margin-bottom: 20px;
+  }
+  header.bookmarks-header h2 { font-weight: 700; color: #111827; margin: 0; white-space: nowrap; }
+  .input-group { flex: 1; min-width: 120px; }
+  label { display: block; font-weight: 500; margin-bottom: 6px; color: #4b5563; font-size: 0.875rem; }
+  input[type="text"], input[type="url"], input[type="search"] {
+    width: 100%; padding: 10px 14px; font-size: 1rem; border: 1.5px solid #d1d5db; border-radius: 0.5rem; outline: none;
+  }
+  input:focus { border-color: #6366f1; }
+  .action-buttons { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; flex-shrink: 0; }
+  .button-row { display: flex; gap: 10px; }
+  button {
+    border: none; font-weight: 600; font-size: 1rem; padding: 12px 20px; border-radius: 0.75rem; cursor: pointer; color: #fff; white-space: nowrap;
+  }
+  button#addBookmarkBtn { background: linear-gradient(135deg, #6366f1, #818cf8); }
+  button.backup-btn { background: #4b5563; }
+  button#restoreBtn { background: #10b981; }
+
+  .tabs-container { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e5e5e5; margin-bottom: 32px; padding-bottom: 5px; overflow-x: auto; }
+  .tab-item { padding: 10px 20px; font-size: 1rem; color: #6b7280; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
+  .tab-item.active { color: #4f46e5; border-bottom-color: #4f46e5; font-weight: 600; }
+  .add-tab-btn { background: #f3f4f6; color: #4b5563; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; border: none; flex-shrink: 0; padding: 0; }
+  .add-tab-btn:hover { background: #e5e7eb; }
+
+  #tabContextMenu {
+    position: fixed; z-index: 99999;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18); padding: 8px; min-width: 185px;
+    display: none; flex-direction: column; gap: 2px;
+  }
+  #tabContextMenu.show { display: flex; }
+
+  .tab-item.tab-dragging { opacity: 0.35; }
+  .tab-item.tab-drag-over { background: #eef2ff; border-radius: 8px; }
+
+  .bookmarks-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(100px,1fr)); gap: 24px; padding-bottom: 40px; }
+
+  .bookmark-card {
+    position: relative; cursor: pointer; background: #ffffff;
+    padding: 14px 14px; border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1); height: auto; min-height: 105px;
+    border: 2px solid transparent;
+  }
+  .bookmark-card:hover { transform: translateY(-6px); box-shadow: 0 12px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08); }
+  .bookmark-card:active { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06); }
+  .bookmark-card.dragging { opacity: 0.4; border: 2px dashed #6366f1; }
+  .bookmark-card.drag-over { border-left: 5px solid #6366f1; }
+
+  .bookmark-card.bm-locked {
+    border: 2px solid #f59e0b !important;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.18) !important;
+  }
+  .bookmark-card.bm-locked .bookmark-icon { filter: grayscale(1) brightness(0.8); }
+  .bm-lock-badge {
+    position: absolute; top: 6px; left: 8px;
+    font-size: 13px; color: #f59e0b;
+  }
+
+  .bookmark-icon {
+    width: 46px; height: 46px; border-radius: 12px; background: #f8fafc;
+    display: flex; justify-content: center; align-items: center; overflow: hidden;
+    pointer-events: none; transition: transform 0.3s ease;
+  }
+  .bookmark-card:hover .bookmark-icon { transform: scale(1.1); }
+  .bookmark-icon img { width: 28px; height: 28px; object-fit: contain; }
+
+  .bookmark-name {
+    font-weight: 600; font-size: 0.875rem; text-align: center; color: #1f2937;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis; width: 100%;
+    pointer-events: none; transition: color 0.2s ease;
+  }
+  .bookmark-card:hover .bookmark-name { color: #4f46e5; }
+
+  .bookmark-card.bm-locked .bookmark-name { color: #d97706 !important; }
+  .bookmark-card.bm-locked:hover .bookmark-name { color: #b45309 !important; }
+
+  .bookmark-context-menu {
+    position: absolute; top: 8px; right: 10px; display: flex; gap: 6px;
+    background: rgba(255,255,255,0.98); border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12); padding: 4px 6px;
+    opacity: 0; pointer-events: none; transition: all 0.2s ease;
+  }
+  .bookmark-card.show-context-menu .bookmark-context-menu { opacity: 1; pointer-events: auto; }
+  .bookmark-context-menu button {
+    background: transparent; border: none; color: #6b7280; font-size: 18px;
+    cursor: pointer; padding: 4px; border-radius: 6px; transition: all 0.2s ease;
+  }
+  .bookmark-context-menu button:hover { background: #f3f4f6; color: #374151; }
+  .bookmark-context-menu button.btn-lock-bm { color: #f59e0b !important; }
+  .bookmark-context-menu button.btn-lock-bm:hover { background: #fef3c7 !important; color: #d97706 !important; }
+  .bookmark-context-menu button.btn-unlock-bm { color: #10b981 !important; }
+  .bookmark-context-menu button.btn-unlock-bm:hover { background: #d1fae5 !important; color: #059669 !important; }
+
+  #bmUnlockModal { display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(17,24,39,0.55); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(3px); }
+  #bmUnlockModal.show { display:flex; }
+  #bmUnlockBox {
+    background: var(--bg); border-radius: 18px; padding: 32px 28px; max-width: 360px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
+  }
+  #bmUnlockBox .bm-lock-big { width: 72px; height: 72px; background: #fef3c7; border-radius: 50%; display:flex; align-items:center; justify-content:center; }
+  #bmUnlockBox h3 { margin:0; font-size:1.2rem; color: var(--text2); }
+  #bmUnlockBox p { margin:0; font-size:0.9rem; color: var(--text3); }
+  #bmUnlockBox input { width:100%; padding:11px 16px; border:1.5px solid #d1d5db; border-radius:0.6rem; font-size:1rem; outline:none; background: var(--bg2); color: var(--text2); user-select:text; }
+  #bmUnlockBox input:focus { border-color:#6366f1; }
+  #bmUnlockBox .bm-unlock-btns { display:flex; gap:10px; width:100%; }
+  #bmUnlockBox .bm-unlock-btns button { flex:1; padding:11px; border-radius:0.6rem; font-size:0.95rem; font-weight:600; border:none; cursor:pointer; }
+  #bmUnlockCancelBtn { background: #f3f4f6; color: #374151 !important; }
+  #bmUnlockGoBtn { background: #6366f1; color: #fff !important; }
+  #bmUnlockErr { color: #ef4444; font-size: 0.82rem; display:none; }
+
+  #bmDeleteModal { display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(17,24,39,0.55); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(3px); }
+  #bmDeleteModal.show { display:flex; }
+  #bmDeleteBox {
+    background: var(--bg); border-radius: 18px; padding: 32px 28px; max-width: 360px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
+  }
+  #bmDeleteBox .bm-del-icon { width: 72px; height: 72px; background: #fee2e2; border-radius: 50%; display:flex; align-items:center; justify-content:center; }
+  #bmDeleteBox h3 { margin:0; font-size:1.2rem; color: var(--text2); }
+  #bmDeleteBox p { margin:0; font-size:0.9rem; color: var(--text3); }
+  #bmDeleteBox input { width:100%; padding:11px 16px; border:1.5px solid #d1d5db; border-radius:0.6rem; font-size:1rem; outline:none; background: var(--bg2); color: var(--text2); user-select:text; }
+  #bmDeleteBox input:focus { border-color:#ef4444; }
+  #bmDeleteBox .bm-del-btns { display:flex; gap:10px; width:100%; }
+  #bmDeleteBox .bm-del-btns button { flex:1; padding:11px; border-radius:0.6rem; font-size:0.95rem; font-weight:600; border:none; cursor:pointer; }
+  #bmDeleteCancelBtn { background: #f3f4f6; color: #374151 !important; }
+  #bmDeleteConfirmBtn { background: #ef4444; color: #fff !important; }
+  #bmDeleteErr { color: #ef4444; font-size: 0.82rem; display:none; }
+
+  #tabLockedWarningModal { display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(17,24,39,0.6); z-index:99999; justify-content:center; align-items:center; backdrop-filter:blur(4px); }
+  #tabLockedWarningModal.show { display:flex; }
+  #tabLockedWarningBox {
+    background: var(--bg); border-radius: 20px; padding: 36px 30px; max-width: 400px; width: 100%;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.25); display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;
+    animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes popIn { from { opacity:0; transform:scale(0.82) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  #tabLockedWarningBox .tlw-icon { width: 80px; height: 80px; background: linear-gradient(135deg,#fef3c7,#fde68a); border-radius: 50%; display:flex; align-items:center; justify-content:center; box-shadow: 0 6px 20px rgba(245,158,11,0.3); }
+  #tabLockedWarningBox h3 { margin:0; font-size:1.25rem; color: var(--text2); font-weight:700; }
+  #tabLockedWarningBox p { margin:0; font-size:0.92rem; color: var(--text3); line-height:1.6; }
+  #tabLockedWarningBox .tlw-locked-list {
+    background: linear-gradient(135deg,#fef9ee,#fffbf0); border: 1.5px solid #fcd34d; border-radius: 12px;
+    padding: 12px 16px; width: 100%; font-size: 0.88rem; color: #92400e; text-align:left;
+    display:flex; flex-direction:column; gap:6px; max-height:150px; overflow-y:auto;
+  }
+  #tabLockedWarningBox .tlw-locked-list .tlw-bm-item { display:flex; align-items:center; gap:8px; font-weight:600; }
+  #tabLockedWarningBox .tlw-locked-list .tlw-bm-item span { font-size:16px; color:#f59e0b; }
+  #tabLockedWarningBox .tlw-ok-btn {
+    background: linear-gradient(135deg,#f59e0b,#fbbf24); color: #fff; border:none;
+    border-radius: 12px; padding: 13px 40px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(245,158,11,0.35); transition: 0.2s;
+    width: 100%;
+  }
+  #tabLockedWarningBox .tlw-ok-btn:hover { transform:translateY(-2px); box-shadow: 0 8px 22px rgba(245,158,11,0.45); }
+
+  .tab-locked-screen {
+    grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 60px 20px; gap: 14px; text-align: center;
+  }
+  .lock-big-icon { width: 90px; height: 90px; background: #eef2ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .tab-locked-screen h3 { font-size: 1.4rem; color: #111827; margin: 0; }
+  .tab-locked-screen p { color: #6b7280; font-size: 0.95rem; margin: 0; }
+  .tab-unlock-form { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
+  .tab-unlock-form input { padding: 11px 16px; border: 1.5px solid #d1d5db; border-radius: 0.6rem; font-size: 1rem; outline: none; width: 230px; user-select: text; }
+  .tab-unlock-form input:focus { border-color: #6366f1; }
+  .tab-unlock-form button { background: #6366f1; color: #fff; padding: 11px 22px; border-radius: 0.6rem; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; }
+  .tab-unlock-error { color: #ef4444; font-size: 0.85rem; margin-top: 2px; display: none; }
+
+  .ai-brain-drawer { position: fixed; top: 0; right: -420px; width: 400px; height: 100%; background: #fff; z-index: 5000; transition: 0.4s ease; box-shadow: -10px 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+  .ai-brain-drawer.open { right: 0; }
+  .ai-brain-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #6366f1; color: white; }
+  .ai-brain-msgs { flex: 1; overflow-y: auto; padding: 20px; background: #f9fafb; display: flex; flex-direction: column; gap: 15px; }
+  .ai-msg { padding: 15px; border-radius: 12px; font-size: 14px; line-height: 1.6; background: #fff; border: 1px solid #e5e7eb; color: #374151; position: relative; }
+  .ai-msg .content { text-align: justify; }
+  .ai-msg .content strong { color: #111827; font-weight: 700; margin-top: 10px; display: inline-block; }
+  .ai-msg .content p { margin: 10px 0; }
+  .ai-msg .content ul { padding-left: 18px; margin: 8px 0; }
+  .ai-msg .content li { margin-bottom: 5px; }
+  .delete-msg-btn { position: absolute; top: 5px; right: 5px; cursor: pointer; color: #ccc; font-size: 18px; }
+  .ai-input-box { padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px; background: white; }
+
+  .msg-btns { display: flex; gap: 8px; margin-top: 12px; border-top: 1px solid #f3f4f6; padding-top: 10px; }
+  .msg-btns button { padding: 5px 10px; font-size: 12px; background: #f3f4f6; color: #4b5563; border-radius: 6px; font-weight: bold; }
+  .dots { display: inline-flex; align-items: center; gap: 4px; padding: 5px; }
+  .dot { width: 6px; height: 6px; background: #6366f1; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
+
+  .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(17,24,39,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
+  .modal-backdrop.show { display: flex; }
+  .modal { background: white; border-radius: 1rem; max-width: 460px; width: 100%; padding: 28px; display: flex; flex-direction: column; }
+
+  .site-footer {
+    text-align: center; padding: 10px 24px; font-size: 0.85rem;
+    color: var(--text3); border-top: 1px solid var(--border);
+    background: var(--bg); transition: background 0.3s, color 0.3s; user-select: text;
+  }
+  .site-footer a { color: #6366f1; text-decoration: none; font-weight: 600; }
+  .site-footer a:hover { text-decoration: underline; }
+
+  @keyframes bannerSlideIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+  @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
+
+  /* ===== CLOCK WIDGET ===== */
+  #clockWidget {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+    z-index: 200; display: flex; flex-direction: column; align-items: center;
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+    border: 1.5px solid rgba(99,102,241,0.2); border-radius: 50px;
+    padding: 5px 22px; box-shadow: 0 4px 20px rgba(99,102,241,0.12);
+    pointer-events: none; transition: background 0.3s, border-color 0.3s;
+    white-space: nowrap;
+  }
+  #clockTime {
+    font-size: 1.05rem; font-weight: 700; color: #4f46e5;
+    letter-spacing: 2.5px; font-family: 'Courier New', monospace;
+    line-height: 1.3;
+  }
+  #clockDate {
+    font-size: 0.65rem; color: #6b7280; letter-spacing: 1px; font-weight: 500; line-height: 1.2;
+  }
+  body.mode-dark #clockWidget { background: rgba(31,41,55,0.85); border-color: rgba(99,102,241,0.35); }
+  body.mode-dark #clockTime { color: #818cf8; }
+  body.mode-dark #clockDate { color: #9ca3af; }
+  body.mode-gray #clockWidget { background: rgba(200,208,216,0.85); border-color: rgba(99,102,241,0.2); }
+
+  /* ===== CALCULATOR FAB ===== */
+  #calcFab {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    box-shadow: 0 6px 24px rgba(99,102,241,0.5);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s; border: none;
+    color: #fff; flex-shrink: 0; padding: 0;
+  }
+  #calcFab:hover { transform: scale(1.1) rotate(-8deg); box-shadow: 0 10px 30px rgba(99,102,241,0.6); }
+
+  /* ===== CALCULATOR PANEL ===== */
+  #calcPanel {
+    display: none; position: fixed; top: 50%; right: 28px; transform: translateY(-50%); z-index: 600;
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+    padding: 18px; width: 275px;
+    animation: calcPop 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes calcPop { from{opacity:0;transform:translateY(calc(-50% + 18px)) scale(0.94)} to{opacity:1;transform:translateY(-50%) scale(1)} }
+
+  #calcDisplay {
+    background: var(--bg2); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; text-align: right;
+    min-height: 68px; display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  #calcExpr { font-size: 0.72rem; color: var(--text3); min-height: 16px; word-break: break-all; }
+  #calcResult { font-size: 1.75rem; font-weight: 700; color: var(--text2); font-family: 'Courier New', monospace; word-break: break-all; line-height: 1.2; }
+
+  .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+  .cbtn {
+    padding: 13px 0; border: none; border-radius: 11px; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: 0.15s; color: var(--text2); background: var(--bg3);
+    user-select: none;
+  }
+  .cbtn:hover { transform: scale(1.07); filter: brightness(0.93); }
+  .cbtn:active { transform: scale(0.95); }
+  .cbtn.cop { background: linear-gradient(135deg, #6366f1, #818cf8); color: #fff; }
+  .cbtn.ceq { background: linear-gradient(135deg, #10b981, #34d399); color: #fff; }
+  .cbtn.cclr { background: linear-gradient(135deg, #ef4444, #f87171); color: #fff; }
+  .cbtn.cbk { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #fff; }
+  .cbtn.csqrt { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: #fff; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<!-- ===== CLOCK WIDGET ===== -->
+<div id="clockWidget">
+  <div id="clockTime">12:00:00 AM</div>
+  <div id="clockDate">Loading...</div>
+</div>
+
+<div class="app-container">
+  <div class="sticky-header">
+    <header class="bookmarks-header">
+      <h2>(One Pilot)</h2>
+      <div class="input-group">
+        <label>Name</label>
+        <input type="text" id="bookmarkNameInput" placeholder="Name..." />
+      </div>
+      <div class="input-group">
+        <label>URL</label>
+        <input type="url" id="bookmarkUrlInput" placeholder="https://..." />
+      </div>
+      <div class="input-group" style="flex:2; min-width:200px;">
+        <label>Search</label>
+        <input type="search" id="searchInput" placeholder="Search across all tabs..." autocomplete="off" />
+      </div>
+      <div class="action-buttons">
+        <div class="button-row">
+          <button id="addBookmarkBtn">Add</button>
+          <button id="backupBtn" class="backup-btn">Backup</button>
+          <button id="restoreBtn" class="backup-btn">Restore</button>
+        </div>
+        <input type="file" id="restoreInput" accept=".json" style="display: none;" />
+
+        <!-- Quick Notes full width -->
+        <div style="display:flex;gap:8px;width:100%;">
+          <a href="https://pilottools.github.io/Quick-Notes/" target="_blank" style="background:linear-gradient(135deg,#10b981,#34d399);color:#fff;border-radius:50px;padding:11px 16px;font-size:0.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(16,185,129,0.4);white-space:nowrap;width:100%;justify-content:center;text-decoration:none;">
+            <span style="font-size:20px;">📝</span> Quick Notes
+          </a>
+        </div>
+
+        <!-- Mode switcher + Calculator FAB side by side -->
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div id="modeSwitcher">
+            <div class="mode-btn m-white active-mode" data-mode="white" title="White Mode">☀️</div>
+            <div class="mode-btn m-gray"  data-mode="gray"  title="Gray Mode">🌥️</div>
+            <div class="mode-btn m-dark"  data-mode="dark"  title="Dark Mode">🌙</div>
+          </div>
+          <button id="calcFab" onclick="toggleCalc()" title="Calculator">
+            <span class="material-icons" style="font-size:26px;pointer-events:none;">calculate</span>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <div class="tabs-container" id="tabsContainer"></div>
+  </div>
+
+  <section class="bookmarks-grid" id="bookmarksGrid"></section>
+  <div id="lockScreenContainer"></div>
+</div>
+
+<footer class="site-footer">
+   Developer: Abdul Hameed Mughal &nbsp;|&nbsp; <a href="https://wa.me/923005682345" target="_blank">0300-568-2345</a>
+</footer>
+
+<div id="tabContextMenu"></div>
+
+<!-- Bookmark Card Unlock Modal -->
+<div id="bmUnlockModal">
+  <div id="bmUnlockBox">
+    <div class="bm-lock-big"><span class="material-icons" style="font-size:36px;color:#f59e0b;">lock</span></div>
+    <h3>🔒 Bookmark Locked</h3>
+    <p id="bmUnlockDesc">Yeh bookmark password se protected hai</p>
+    <input type="password" id="bmUnlockInp" placeholder="Password dalein..." />
+    <div id="bmUnlockErr">❌ Wrong password, dobara try karein!</div>
+    <div class="bm-unlock-btns">
+      <button id="bmUnlockCancelBtn">Cancel</button>
+      <button id="bmUnlockGoBtn">Unlock &amp; Open</button>
+    </div>
+  </div>
+</div>
+
+<!-- Locked Bookmark Delete Confirm Modal -->
+<div id="bmDeleteModal">
+  <div id="bmDeleteBox">
+    <div class="bm-del-icon"><span class="material-icons" style="font-size:36px;color:#ef4444;">delete_forever</span></div>
+    <h3>🗑️ Delete Locked Bookmark</h3>
+    <p id="bmDeleteDesc">Delete karne ke liye password dalein</p>
+    <input type="password" id="bmDeleteInp" placeholder="Password dalein..." />
+    <div id="bmDeleteErr">❌ Wrong password! Delete nahi hua.</div>
+    <div class="bm-del-btns">
+      <button id="bmDeleteCancelBtn">Cancel</button>
+      <button id="bmDeleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tab Delete Blocked — Locked Cards Warning Modal -->
+<div id="tabLockedWarningModal">
+  <div id="tabLockedWarningBox">
+    <div class="tlw-icon">
+      <span class="material-icons" style="font-size:40px;color:#f59e0b;">lock</span>
+    </div>
+    <h3>🚫 Tab Delete Nahi Ho Sakta!</h3>
+    <p>Is tab mein <strong id="tlwLockedCount">kuch</strong> locked bookmark(s) hain.<br>Pehle in sab cards ko <strong>unlock</strong> karein, phir tab delete karein.</p>
+    <div class="tlw-locked-list" id="tlwLockedList"></div>
+    <button class="tlw-ok-btn" id="tlwOkBtn">Theek Hai, Samajh Gaya! 👍</button>
+  </div>
+</div>
+
+<div id="aiBrainDrawer" class="ai-brain-drawer">
+  <div class="ai-brain-header">
+    <div style="display:flex;align-items:center;gap:8px;"><span class="material-icons">psychology</span><strong>AI Brain</strong></div>
+    <span class="material-icons" style="cursor:pointer" onclick="toggleBrain()">close</span>
+  </div>
+  <div class="ai-brain-msgs" id="aiBrainMsgs"></div>
+  <div class="ai-input-box">
+    <input type="text" id="aiBrainInp" placeholder="Type topic here..." style="flex:1;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;outline:none">
+    <button onclick="askBrain()" style="background:#6366f1;color:white;border-radius:8px;padding:0 15px;">Send</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h2 id="modalTitle">Edit Bookmark</h2>
+    <form id="bookmarkForm">
+      <label>Name</label><input type="text" id="modalBookmarkName" required style="width:100%;margin-bottom:15px;padding:10px;border:1.5px solid #ddd;border-radius:8px"/>
+      <label>URL</label><input type="url" id="modalBookmarkUrl" required style="width:100%;margin-bottom:15px;padding:10px;border:1.5px solid #ddd;border-radius:8px"/>
+      <div style="display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" id="cancelModalBtn" style="background:#f3f4f6;color:#374151">Cancel</button>
+        <button type="submit" style="background:#6366f1">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Calculator Panel -->
+<div id="calcPanel">
+  <div id="calcDisplay">
+    <div id="calcExpr"></div>
+    <div id="calcResult">0</div>
+  </div>
+  <div class="calc-grid">
+    <button class="cbtn cclr" onclick="calcClear()">AC</button>
+    <button class="cbtn cbk"  onclick="calcBack()">⌫</button>
+    <button class="cbtn csqrt" onclick="calcSqrt()">√</button>
+    <button class="cbtn cop"  onclick="calcInput('/')">÷</button>
+
+    <button class="cbtn" onclick="calcInput('7')">7</button>
+    <button class="cbtn" onclick="calcInput('8')">8</button>
+    <button class="cbtn" onclick="calcInput('9')">9</button>
+    <button class="cbtn cop" onclick="calcInput('*')">×</button>
+
+    <button class="cbtn" onclick="calcInput('4')">4</button>
+    <button class="cbtn" onclick="calcInput('5')">5</button>
+    <button class="cbtn" onclick="calcInput('6')">6</button>
+    <button class="cbtn cop" onclick="calcInput('-')">−</button>
+
+    <button class="cbtn" onclick="calcInput('1')">1</button>
+    <button class="cbtn" onclick="calcInput('2')">2</button>
+    <button class="cbtn" onclick="calcInput('3')">3</button>
+    <button class="cbtn cop" onclick="calcInput('+')">+</button>
+
+    <button class="cbtn" onclick="calcInput('0')" style="grid-column:span 2;">0</button>
+    <button class="cbtn" onclick="calcInput('.')">.</button>
+    <button class="cbtn ceq" onclick="calcEquals()">=</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const DEFAULT_BMS = [
+    { name:'Google',       url:'https://www.google.com' },
+    { name:'Youtube',      url:'https://www.youtube.com' },
+    { name:'Whatsapp',     url:'https://web.whatsapp.com' },
+    { name:'Gmail',        url:'https://mail.google.com' },
+    { name:'ChatGPT',      url:'https://chatgpt.com' },
+    { name:'Facebook',     url:'https://www.facebook.com' },
+    { name:'Instagram',    url:'https://www.instagram.com/' },
+    { name:'Toolbox',      url:'https://onepilottools.com/toolbox/' },
+    { name:'Free Courses', url:'https://onepilottools.com/my-free-courses/' },
+    { name:'CV Formats',   url:'https://www.mediafire.com/file/pncgy2plyl1ctu8/Professional+CV+Formats++.zip/file' },
+    { name:'TikTok',       url:'https://www.tiktok.com' },
+    { name:'Canva',        url:'https://www.canva.com' },
+    { name:'Twitter',      url:'https://www.twitter.com' },
+    { name:'LinkedIn',     url:'https://www.linkedin.com' },
+  ];
+
+  const DEFAULT_AI_BMS = [
+    { name:'Gemini',      url:'https://gemini.google.com' },
+    { name:'Deepseek',    url:'https://chat.deepseek.com' },
+    { name:'Kimi',        url:'https://www.kimi.com/en' },
+    { name:'Claude',      url:'https://claude.ai' },
+    { name:'Grok',        url:'https://grok.com' },
+    { name:'Meta',        url:'https://www.meta.ai' },
+    { name:'Perplexity',  url:'https://www.perplexity.ai' }
+  ];
+
+  const DEFAULT_EARNING_BMS = [
+    { name:'Fiverr',        url:'https://www.fiverr.com' },
+    { name:'Upwork',        url:'https://www.upwork.com' },
+    { name:'Freelancer',    url:'https://www.freelancer.com' },
+    { name:'Kwork',         url:'https://kwork.com/' },
+    { name:'Redbubble',     url:'https://www.redbubble.com' },
+    { name:'PeoplePerHour', url:'https://www.peopleperhour.com' },
+    { name:'Daraz',         url:'https://www.daraz.pk/' },
+  ];
+
+  const DATA_VERSION = 4;
+
+  let appData = { tabs:[], version: DATA_VERSION };
+  let activeTabId = null;
+  let editingBookmarkId = null;
+  let draggedItemIndex = null;
+  let unlockedTabs = new Set();
+  let unlockedBookmarks = new Set();
+
+  const uid = () => Math.random().toString(36).substr(2,9);
+
+  // =====================================================================
+  // FAVICON — FREE COURSES icon alag rakha gaya hai
+  // =====================================================================
+  function getFavicon(url) {
+    try {
+      const d = new URL(url).hostname.toLowerCase();
+      if (d.includes('mail.google.com') || d.includes('gmail.com'))
+        return 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico';
+      if (d.includes('whatsapp.com'))
+        return 'https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg';
+      if (d.includes('deepseek.com'))
+        return 'https://vectorseek.com/wp-content/uploads/2025/01/Deepseek-Chat-App-Icon-PNG-Vector.png';
+      // FREE COURSES — apna unique icon
+      if (url.toLowerCase().includes('my-free-courses') || url.toLowerCase().includes('free-courses'))
+        return 'https://cdn-icons-png.flaticon.com/128/3076/3076712.png';
+      if (d.includes('onepilottools.com'))
+        return 'https://cdn-icons-png.flaticon.com/512/5109/5109515.png';
+      if (d.includes('pilottools.github.io'))
+        return 'https://cdn-icons-png.flaticon.com/512/5109/5109515.png';
+      return `https://www.google.com/s2/favicons?domain=${d}&sz=64`;
+    } catch {
+      return 'https://via.placeholder.com/32';
+    }
+  }
+
+  function getFaviconImgTag(url) {
+    try {
+      const d = new URL(url).hostname.toLowerCase();
+      const primary = getFavicon(url);
+      const fallback1 = `https://icon.horse/icon/${d}`;
+      const fallback2 = `https://icons.duckduckgo.com/ip3/${d}.ico`;
+      const fallback3 = `https://via.placeholder.com/28x28?text=${encodeURIComponent(d[0].toUpperCase())}`;
+      return `<img
+        src="${primary}"
+        onerror="
+          if(!this.dataset.f1){this.dataset.f1='1';this.src='${fallback1}';}
+          else if(!this.dataset.f2){this.dataset.f2='1';this.src='${fallback2}';}
+          else if(!this.dataset.f3){this.dataset.f3='1';this.src='${fallback3}';}
+        "
+        loading="lazy"
+      />`;
+    } catch {
+      return `<img src="https://via.placeholder.com/28" />`;
+    }
+  }
+
+  function saveData() {
+    appData.version = DATA_VERSION;
+    localStorage.setItem('onepilot_v3', JSON.stringify(appData));
+  }
+
+  function smartSyncTab(tabName, defaultList) {
+    const tab = appData.tabs.find(t => t.name === tabName);
+    if (!tab) return;
+
+    const seen = new Set();
+    tab.bookmarks = tab.bookmarks.filter(b => {
+      const key = b.url.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const nameMap = {};
+    tab.bookmarks.forEach(b => { nameMap[b.name.toLowerCase()] = b; });
+
+    const urlMap = {};
+    tab.bookmarks.forEach(b => { urlMap[b.url.toLowerCase().trim()] = b; });
+
+    defaultList.forEach(def => {
+      const defNameKey = def.name.toLowerCase();
+      const defUrlKey  = def.url.toLowerCase().trim();
+
+      if (urlMap[defUrlKey]) {
+        const existing = urlMap[defUrlKey];
+        existing.name = def.name;
+      } else if (nameMap[defNameKey]) {
+        const existing = nameMap[defNameKey];
+        delete urlMap[existing.url.toLowerCase().trim()];
+        existing.url  = def.url;
+        existing.name = def.name;
+        urlMap[defUrlKey] = existing;
+      } else {
+        const newBm = { id: uid(), name: def.name, url: def.url };
+        tab.bookmarks.push(newBm);
+        nameMap[defNameKey] = newBm;
+        urlMap[defUrlKey]   = newBm;
+      }
+    });
+
+    const defaultUrls = defaultList.map(d => d.url.toLowerCase().trim());
+    const reordered = [];
+    defaultList.forEach(def => {
+      const found = tab.bookmarks.find(b => b.url.toLowerCase().trim() === def.url.toLowerCase().trim());
+      if (found) reordered.push(found);
+    });
+    tab.bookmarks.forEach(b => {
+      if (!defaultUrls.includes(b.url.toLowerCase().trim())) reordered.push(b);
+    });
+    tab.bookmarks = reordered;
+  }
+
+  function loadData() {
+    const s = localStorage.getItem('onepilot_v3');
+    if (s) {
+      try { appData = JSON.parse(s); } catch { appData = { tabs:[] }; }
+      activeTabId = appData.tabs[0]?.id;
+
+      const dailyTab = appData.tabs.find(t => t.name === 'Daily');
+      if (dailyTab) {
+        dailyTab.bookmarks = dailyTab.bookmarks.filter(b => {
+          const u = b.url.toLowerCase().trim();
+          if (['https://web.snapchat.com','https://www.pinterest.com'].includes(u)) return false;
+          return true;
+        });
+      }
+
+      smartSyncTab('Daily', DEFAULT_BMS);
+
+      if (!appData.tabs.some(t => t.name === 'AI Lab')) {
+        appData.tabs.splice(1, 0, {
+          id: uid(), name: 'AI Lab',
+          bookmarks: DEFAULT_AI_BMS.map(b => ({id:uid(),...b}))
+        });
+      }
+      smartSyncTab('AI Lab', DEFAULT_AI_BMS);
+
+      if (!appData.tabs.some(t => t.name === 'Work & Earn')) {
+        appData.tabs.push({
+          id: uid(), name: 'Work & Earn',
+          bookmarks: DEFAULT_EARNING_BMS.map(b => ({id:uid(),...b}))
+        });
+      }
+      smartSyncTab('Work & Earn', DEFAULT_EARNING_BMS);
+
+      saveData();
+    } else {
+      resetData();
+    }
+    renderUI();
+  }
+
+  function resetData() {
+    const id1 = uid();
+    appData = {
+      version: DATA_VERSION,
+      tabs:[
+        { id: id1,   name:'Daily',       bookmarks: DEFAULT_BMS.map(b=>({id:uid(),...b})) },
+        { id: uid(), name:'AI Lab',      bookmarks: DEFAULT_AI_BMS.map(b=>({id:uid(),...b})) },
+        { id: uid(), name:'Work & Earn', bookmarks: DEFAULT_EARNING_BMS.map(b=>({id:uid(),...b})) }
+      ]
+    };
+    activeTabId = id1;
+    saveData();
+  }
+
+  function renderUI() { renderTabs(); renderGrid(); }
+
+  function renderTabs() {
+    const tc = document.getElementById('tabsContainer');
+    tc.innerHTML = '';
+    appData.tabs.forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'tab-item' + (t.id===activeTabId?' active':'');
+      el.dataset.tabid = t.id;
+      const color = t.color || '#4f46e5';
+      if(t.id === activeTabId) { el.style.color = color; el.style.borderBottomColor = '#111827'; }
+
+      el.innerHTML = t.name
+        + `<span style="font-size:0.72rem;background:${t.id===activeTabId?'#6366f1':'#e5e7eb'};color:${t.id===activeTabId?'#fff':'#6b7280'};border-radius:20px;padding:1px 7px;margin-left:5px;font-weight:700;transition:0.2s;">${t.bookmarks.length}</span>`
+        + (t.password ? '<span class="material-icons" style="font-size:13px;margin-left:2px;">lock</span>' : '');
+
+      el.onclick = () => {
+        activeTabId = t.id;
+        document.getElementById('searchInput').value = '';
+        renderUI();
+      };
+
+      el.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); openTabMenu(t.id, e.clientX, e.clientY); };
+      el.draggable = true;
+      el.ondragstart = e => { e.dataTransfer.setData('tab-drag-id', t.id); setTimeout(()=>el.classList.add('tab-dragging'),0); };
+      el.ondragend = () => el.classList.remove('tab-dragging');
+      el.ondragover = e => { e.preventDefault(); el.classList.add('tab-drag-over'); };
+      el.ondragleave = () => el.classList.remove('tab-drag-over');
+      el.ondrop = e => {
+        e.preventDefault(); el.classList.remove('tab-drag-over');
+        const bmId = e.dataTransfer.getData('bookmark-cross-tab');
+        const fromTab = e.dataTransfer.getData('tab-drag-id');
+        if(bmId) { moveBookmarkToTab(bmId, t.id); }
+        else if(fromTab && fromTab!==t.id) {
+          const tabs=appData.tabs, fi=tabs.findIndex(x=>x.id===fromTab), ti=tabs.findIndex(x=>x.id===t.id);
+          const [m]=tabs.splice(fi,1); tabs.splice(ti,0,m);
+          saveData(); renderUI();
+        }
+      };
+      tc.appendChild(el);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className='add-tab-btn'; addBtn.innerHTML='+';
+    addBtn.onclick = () => {
+      const name=prompt('Enter Category Name:');
+      if(name&&name.trim()){ const id=uid(); appData.tabs.push({id,name:name.trim(),bookmarks:[]}); activeTabId=id; saveData(); renderUI(); }
+    };
+    tc.appendChild(addBtn);
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('bookmarksGrid');
+    const lockContainer = document.getElementById('lockScreenContainer');
+    grid.innerHTML = ''; lockContainer.innerHTML = '';
+    const activeTab = appData.tabs.find(t=>t.id===activeTabId);
+    const term = document.getElementById('searchInput').value.toLowerCase();
+    const activeTabIsLocked = activeTab && activeTab.password && !unlockedTabs.has(activeTab.id);
+
+    if(activeTabIsLocked) {
+      lockContainer.innerHTML = `
+        <div class="tab-locked-screen">
+          <div class="lock-big-icon"><span class="material-icons" style="font-size:44px;color:#6366f1;">lock</span></div>
+          <h3>🔒 Tab Locked</h3>
+          <p>"${activeTab.name}" tab password se protected hai</p>
+          <div class="tab-unlock-form">
+            <input type="password" id="inlineUnlockInp" placeholder="Password dalein..." />
+            <button id="inlineUnlockBtn">Unlock</button>
+          </div>
+          <div class="tab-unlock-error" id="inlineUnlockErr">❌ Wrong password, dobara try karein!</div>
+        </div>`;
+      const doUnlock = () => {
+        const inp = document.getElementById('inlineUnlockInp');
+        const err = document.getElementById('inlineUnlockErr');
+        if(btoa(inp.value) === activeTab.password) { unlockedTabs.add(activeTab.id); renderUI(); }
+        else { err.style.display='block'; inp.value=''; inp.focus(); }
+      };
+      document.getElementById('inlineUnlockBtn').onclick = doUnlock;
+      document.getElementById('inlineUnlockInp').onkeydown = e => { if(e.key==='Enter') doUnlock(); };
+    }
+
+    let list = [];
+    let isSearching = false;
+
+    if(term) {
+      isSearching = true;
+      appData.tabs.forEach(tab => {
+        if(tab.password && !unlockedTabs.has(tab.id)) return;
+        tab.bookmarks.forEach(bm => { if(bm.name.toLowerCase().includes(term)) list.push({...bm, tabId:tab.id}); });
+      });
+    } else if(!activeTabIsLocked) {
+      if(activeTab) list = activeTab.bookmarks.map(b=>({...b,tabId:activeTabId}));
+    }
+
+    list.forEach((bm,idx) => {
+      const card = document.createElement('article');
+      const isLocked = !!bm.bmPassword && !unlockedBookmarks.has(bm.id);
+      card.className = 'bookmark-card' + (isSearching ? ' search-match' : '') + (isLocked ? ' bm-locked' : '');
+      card.draggable = !isLocked;
+
+      const lockBadge = isLocked ? `<span class="material-icons bm-lock-badge" title="Locked">lock</span>` : '';
+
+      let lockBtn = '';
+      if(!bm.bmPassword) {
+        lockBtn = `<button class="material-icons btn-lock-bm" data-action="bm-lock" title="Lock this bookmark">lock</button>`;
+      } else if(isLocked) {
+        lockBtn = `<button class="material-icons btn-unlock-bm" data-action="bm-unlock" title="Unlock bookmark">lock_open</button>
+                   <button class="material-icons" data-action="bm-remove-password" title="Remove password" style="color:#ef4444!important;">no_encryption</button>`;
+      } else {
+        lockBtn = `<button class="material-icons" data-action="bm-remove-password" title="Remove password" style="color:#ef4444!important;">no_encryption</button>`;
+      }
+
+      const editDeleteBtns = isLocked
+        ? ''
+        : `<button class="material-icons" data-action="edit">edit</button>
+           <button class="material-icons" data-action="delete">delete</button>`;
+
+      const lockedDeleteBtn = isLocked
+        ? `<button class="material-icons" data-action="bm-locked-delete" title="Delete (requires password)" style="color:#ef4444!important;">delete</button>`
+        : '';
+
+      card.innerHTML = lockBadge + `
+        <div class="bookmark-icon">${getFaviconImgTag(bm.url)}</div>
+        <div class="bookmark-name">${bm.name}</div>
+        <div class="bookmark-context-menu">
+          ${editDeleteBtns}
+          ${lockBtn}
+          ${lockedDeleteBtn}
+        </div>`;
+
+      card.onclick = e => {
+        if(e.target.closest('.bookmark-context-menu')) return;
+        if(isLocked) { openBmUnlockModal(bm); }
+        else { window.open(bm.url,'_self'); }
+      };
+
+      card.oncontextmenu = e => {
+        e.preventDefault();
+        document.querySelectorAll('.bookmark-card').forEach(c=>c.classList.remove('show-context-menu'));
+        card.classList.add('show-context-menu');
+      };
+
+      if(!isLocked) {
+        card.ondragstart = e => { draggedItemIndex=idx; card.classList.add('dragging'); e.dataTransfer.setData('bookmark-cross-tab',bm.id); e.dataTransfer.effectAllowed='move'; };
+        card.ondragover = e => e.preventDefault();
+        card.ondrop = () => {
+          if(term) return;
+          if(draggedItemIndex!==null && draggedItemIndex!==idx) {
+            const bms=appData.tabs.find(t=>t.id===activeTabId).bookmarks;
+            const [item]=bms.splice(draggedItemIndex,1); bms.splice(idx,0,item);
+            saveData(); renderUI();
+          }
+        };
+        card.ondragend = () => card.classList.remove('dragging');
+      }
+
+      card.querySelector('.bookmark-context-menu').onclick = e => {
+        const action = e.target.getAttribute('data-action');
+        const tTab = appData.tabs.find(t=>t.id===bm.tabId);
+        const bmObj = tTab ? tTab.bookmarks.find(b=>b.id===bm.id) : null;
+
+        if(action==='delete') {
+          if(tTab) tTab.bookmarks=tTab.bookmarks.filter(b=>b.id!==bm.id);
+          saveData(); renderUI();
+        }
+        if(action==='bm-locked-delete') { openBmDeleteModal(bm); }
+        if(action==='edit') {
+          editingBookmarkId=bm.id;
+          document.getElementById('modalBookmarkName').value=bm.name;
+          document.getElementById('modalBookmarkUrl').value=bm.url;
+          document.getElementById('modalBackdrop').classList.add('show');
+        }
+        if(action==='bm-lock') {
+          const pw = prompt(`"${bm.name}" ke liye password set karein:`);
+          if(pw && pw.trim()) {
+            if(bmObj) { bmObj.bmPassword = btoa(pw); unlockedBookmarks.delete(bm.id); }
+            saveData(); renderUI();
+          }
+        }
+        if(action==='bm-unlock') { openBmUnlockModal(bm); }
+        if(action==='bm-remove-password') {
+          const pw = prompt('Current password dalein password remove karne ke liye:');
+          if(pw === null) return;
+          if(bmObj && btoa(pw) === bmObj.bmPassword) {
+            delete bmObj.bmPassword;
+            unlockedBookmarks.delete(bm.id);
+            saveData(); renderUI();
+          } else {
+            alert('❌ Wrong password! Password remove nahi hua.');
+          }
+        }
+      };
+
+      grid.appendChild(card);
+    });
+  }
+
+  function openBmUnlockModal(bm) {
+    const modal = document.getElementById('bmUnlockModal');
+    const inp = document.getElementById('bmUnlockInp');
+    const err = document.getElementById('bmUnlockErr');
+    const desc = document.getElementById('bmUnlockDesc');
+    desc.textContent = `"${bm.name}" password se protected hai`;
+    inp.value = ''; err.style.display = 'none';
+    modal.classList.add('show');
+    setTimeout(()=>inp.focus(), 100);
+
+    const doUnlock = () => {
+      if(btoa(inp.value) === bm.bmPassword) {
+        unlockedBookmarks.add(bm.id);
+        modal.classList.remove('show');
+        renderUI();
+        window.open(bm.url, '_self');
+      } else {
+        err.style.display = 'block';
+        inp.value = ''; inp.focus();
+      }
+    };
+
+    document.getElementById('bmUnlockGoBtn').onclick = doUnlock;
+    document.getElementById('bmUnlockCancelBtn').onclick = () => modal.classList.remove('show');
+    inp.onkeydown = e => { if(e.key==='Enter') doUnlock(); };
+  }
+
+  function openBmDeleteModal(bm) {
+    const modal = document.getElementById('bmDeleteModal');
+    const inp = document.getElementById('bmDeleteInp');
+    const err = document.getElementById('bmDeleteErr');
+    const desc = document.getElementById('bmDeleteDesc');
+    desc.textContent = `"${bm.name}" delete karne ke liye password dalein`;
+    inp.value = ''; err.style.display = 'none';
+    modal.classList.add('show');
+    setTimeout(()=>inp.focus(), 100);
+
+    const doDelete = () => {
+      if(btoa(inp.value) === bm.bmPassword) {
+        modal.classList.remove('show');
+        appData.tabs.forEach(t => { t.bookmarks = t.bookmarks.filter(b => b.id !== bm.id); });
+        unlockedBookmarks.delete(bm.id);
+        saveData(); renderUI();
+      } else {
+        err.style.display = 'block';
+        inp.value = ''; inp.focus();
+      }
+    };
+
+    document.getElementById('bmDeleteConfirmBtn').onclick = doDelete;
+    document.getElementById('bmDeleteCancelBtn').onclick = () => modal.classList.remove('show');
+    inp.onkeydown = e => { if(e.key==='Enter') doDelete(); };
+  }
+
+  function showTabLockedWarning(lockedBookmarks) {
+    const modal = document.getElementById('tabLockedWarningModal');
+    const countEl = document.getElementById('tlwLockedCount');
+    const listEl = document.getElementById('tlwLockedList');
+    countEl.textContent = lockedBookmarks.length;
+    listEl.innerHTML = lockedBookmarks.map(bm =>
+      `<div class="tlw-bm-item"><span class="material-icons">lock</span> ${bm.name}</div>`
+    ).join('');
+    modal.classList.add('show');
+    document.getElementById('tlwOkBtn').onclick = () => modal.classList.remove('show');
+  }
+
+  function openTabMenu(tabId, x, y) {
+    const menu = document.getElementById('tabContextMenu');
+    const t = appData.tabs.find(x=>x.id===tabId);
+    menu.innerHTML = ''; menu.className = 'show';
+    Object.assign(menu.style, { position:'fixed', display:'flex', flexDirection:'column', gap:'2px', zIndex:'99999', background:'#fff', border:'1px solid #e5e7eb', borderRadius:'12px', boxShadow:'0 12px 32px rgba(0,0,0,0.18)', padding:'8px', minWidth:'185px' });
+
+    const acts = [
+      { icon:'edit', label:'Rename', fn:()=>{
+        if(t.password && !unlockedTabs.has(t.id)){ alert('❌ Tab locked hai! Pehle unlock karein.'); return; }
+        const n=prompt('New tab name:',t.name); if(n&&n.trim()){t.name=n.trim();saveData();renderUI();}
+      }},
+      { icon:t.password?'lock_open':'lock', label:t.password?'Remove Password':'Set Password', fn:()=>{
+        if(t.password){
+          const pw=prompt('Current password dalein:'); if(pw===null)return;
+          if(btoa(pw)!==t.password){alert('❌ Wrong password!');return;}
+          delete t.password; unlockedTabs.delete(t.id); saveData(); renderUI();
+        } else {
+          const pw=prompt('New password set karein:'); if(pw&&pw.trim()){t.password=btoa(pw); unlockedTabs.delete(t.id); saveData(); renderUI();}
+        }
+      }},
+      { icon:'delete', label:'Delete Tab', danger:true, fn:()=>{
+        const lockedBms = t.bookmarks.filter(b => !!b.bmPassword);
+        if(lockedBms.length > 0) { showTabLockedWarning(lockedBms); return; }
+        if(!confirm(`"${t.name}" tab delete karen?`))return;
+        if(t.password){ const pw=prompt('Password dalein:'); if(pw===null)return; if(btoa(pw)!==t.password){alert('❌ Wrong password!');return;} }
+        appData.tabs=appData.tabs.filter(x=>x.id!==tabId);
+        if(activeTabId===tabId) activeTabId=appData.tabs[0]?.id||null;
+        saveData(); renderUI();
+      }}
+    ];
+
+    acts.forEach(a=>{
+      const btn=document.createElement('button');
+      btn.style.cssText=`display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:0.875rem;color:${a.danger?'#ef4444':'#374151'};border-radius:7px;cursor:pointer;background:none;border:none;font-weight:500;width:100%;text-align:left;`;
+      btn.innerHTML=`<span class="material-icons" style="font-size:16px;">${a.icon}</span>${a.label}`;
+      btn.onmouseenter=()=>btn.style.background=a.danger?'#fef2f2':'#f3f4f6';
+      btn.onmouseleave=()=>btn.style.background='none';
+      btn.onclick=e=>{ e.stopPropagation(); closeMenu(); a.fn(); };
+      menu.appendChild(btn);
+    });
+
+    const vw=window.innerWidth, vh=window.innerHeight;
+    let left=x, top=y+4;
+    if(left+200>vw) left=vw-205;
+    if(top+240>vh) top=y-245;
+    menu.style.left=left+'px'; menu.style.top=top+'px';
+    setTimeout(()=>document.addEventListener('click', closeMenu, {once:true}), 10);
+  }
+
+  function closeMenu() { const m=document.getElementById('tabContextMenu'); m.style.display='none'; m.className=''; }
+
+  function moveBookmarkToTab(bmId, targetTabId) {
+    let bm=null, srcTab=null;
+    appData.tabs.forEach(t=>{ const f=t.bookmarks.find(b=>b.id===bmId); if(f){bm=f;srcTab=t;} });
+    if(!bm||!srcTab||srcTab.id===targetTabId) return;
+    if(bm.bmPassword && !unlockedBookmarks.has(bm.id)) return;
+    srcTab.bookmarks=srcTab.bookmarks.filter(b=>b.id!==bmId);
+    appData.tabs.find(t=>t.id===targetTabId)?.bookmarks.push(bm);
+    saveData(); renderUI();
+  }
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if(e.keyCode===123){e.preventDefault();return false;}
+    if(e.ctrlKey&&e.shiftKey&&(e.keyCode===73||e.keyCode===74)){e.preventDefault();return false;}
+    if(e.ctrlKey&&e.keyCode===85){e.preventDefault();return false;}
+    if(e.ctrlKey&&e.keyCode===83){e.preventDefault();return false;}
+  });
+  console.log("%cStop!", "color:red; font-size:40px; font-weight:bold;");
+  console.log("%cBahi, yahan se code copy karna mana hai!", "color:orange; font-size:16px;");
+
+  const nInp=document.getElementById('bookmarkNameInput');
+  const uInp=document.getElementById('bookmarkUrlInput');
+  const addBtn=document.getElementById('addBookmarkBtn');
+  [nInp,uInp].forEach(inp=>inp.onkeydown=e=>{if(e.key==='Enter')addBtn.click();});
+
+  addBtn.onclick=()=>{
+    if(!nInp.value||!uInp.value)return;
+    appData.tabs.find(t=>t.id===activeTabId).bookmarks.push({id:uid(),name:nInp.value,url:uInp.value});
+    nInp.value=''; uInp.value=''; saveData(); renderUI();
+  };
+
+  document.getElementById('searchInput').onkeydown=e=>{
+    if(e.key==='Enter'){
+      const val=e.target.value.toLowerCase();
+      let found=null;
+      appData.tabs.forEach(t=>{
+        if(t.password && !unlockedTabs.has(t.id)) return;
+        const b=t.bookmarks.find(x=>x.name.toLowerCase().includes(val));
+        if(b) found=b;
+      });
+      if(found) {
+        if(found.bmPassword && !unlockedBookmarks.has(found.id)) { openBmUnlockModal(found); }
+        else { window.open(found.url,'_self'); }
+      }
+    }
+  };
+
+  document.getElementById('backupBtn').onclick=()=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(appData)],{type:'text/json'}));
+    a.download='bookmarks_backup.json'; a.click();
+  };
+  document.getElementById('restoreBtn').onclick=()=>document.getElementById('restoreInput').click();
+  document.getElementById('restoreInput').onchange=e=>{
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const d=JSON.parse(ev.target.result);
+        if(d.tabs){
+          appData=d;
+          smartSyncTab('Daily', DEFAULT_BMS);
+          smartSyncTab('AI Lab', DEFAULT_AI_BMS);
+          smartSyncTab('Work & Earn', DEFAULT_EARNING_BMS);
+          activeTabId=d.tabs[0].id;
+          saveData();renderUI();
+        }
+      }catch{alert('Invalid Backup File');}
+    };
+    if(e.target.files[0])r.readAsText(e.target.files[0]);
+  };
+
+  document.getElementById('bookmarkForm').onsubmit=e=>{
+    e.preventDefault();
+    appData.tabs.forEach(t=>{const bm=t.bookmarks.find(b=>b.id===editingBookmarkId);if(bm){bm.name=document.getElementById('modalBookmarkName').value;bm.url=document.getElementById('modalBookmarkUrl').value;}});
+    document.getElementById('modalBackdrop').classList.remove('show'); saveData(); renderUI();
+  };
+  document.getElementById('cancelModalBtn').onclick=()=>document.getElementById('modalBackdrop').classList.remove('show');
+  document.getElementById('searchInput').oninput=renderUI;
+  document.addEventListener('click',e=>{if(!e.target.closest('.bookmark-card'))document.querySelectorAll('.bookmark-card').forEach(c=>c.classList.remove('show-context-menu'));});
+
+  loadData();
+  window._openBmUnlockModal = openBmUnlockModal;
+})();
+
+// =====================================================================
+// AI BRAIN
+// =====================================================================
+let chatHistory=JSON.parse(localStorage.getItem('ai_chat_history'))||[];
+window.toggleBrain=()=>document.getElementById('aiBrainDrawer').classList.toggle('open');
+
+function formatAIResponse(text){
+  let c=text.replace(/\*\*\*(.*?)\*\*\*/g,'<strong>$1</strong>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<strong>$1</strong>');
+  let lines=c.split('\n'),h='',inList=false;
+  lines.forEach(line=>{
+    line=line.trim();if(!line)return;
+    if(line.startsWith('* ')||line.startsWith('- ')||line.startsWith('•')){if(!inList){h+='<ul>';inList=true;}h+=`<li>${line.replace(/^[\*\-\•]\s*/,'')}</li>`;}
+    else{if(inList){h+='</ul>';inList=false;}h+=line.endsWith(':')?`<p><strong>${line}</strong></p>`:`<p>${line}</p>`;}
+  });
+  if(inList)h+='</ul>';return h;
+}
+
+function renderChat(){
+  const c=document.getElementById('aiBrainMsgs');
+  c.innerHTML=chatHistory.length===0?'<div class="ai-msg">Salam Bahi! Topic likhen, main summarize kar doon ga.</div>':'';
+  chatHistory.forEach((msg,idx)=>{
+    const div=document.createElement('div');div.className='ai-msg';
+    if(msg.type==='user')div.style='background:#6366f1;color:white;align-self:flex-end;border:none;';
+    div.innerHTML=`<span class="material-icons delete-msg-btn" onclick="deleteMsg(${idx})">close</span><div class="content">${msg.text}</div>${msg.type==='ai'?`<div class="msg-btns"><button onclick="copyMsg(${idx})">Copy</button><button onclick="downloadWord(${idx})">Word</button></div>`:''}`;
+    c.appendChild(div);
+  });
+  c.scrollTop=c.scrollHeight;
+}
+
+window.deleteMsg=(idx)=>{chatHistory.splice(idx,1);localStorage.setItem('ai_chat_history',JSON.stringify(chatHistory));renderChat();};
+
+window.askBrain=async()=>{
+  const inp=document.getElementById('aiBrainInp');const val=inp.value.trim();if(!val)return;
+  chatHistory.push({type:'user',text:val});inp.value='';renderChat();
+  const loader=document.createElement('div');loader.className='ai-msg';loader.id='temp_loader';
+  loader.innerHTML='<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  document.getElementById('aiBrainMsgs').appendChild(loader);
+  try{
+    const res=await fetch('https://hidden-grass-b041onepilot-essay-writer.onepilottools.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:`Please provide a concise and clear summary of the following topic: "${val}". Focus on the most important points only, use bullet points for clarity, and end with a brief "Key Takeaway" or "Conclusion".`,wordCount:300})});
+    const d=await res.json();
+    document.getElementById('temp_loader').remove();
+    chatHistory.push({type:'ai',text:formatAIResponse(d.essay)});
+    localStorage.setItem('ai_chat_history',JSON.stringify(chatHistory));renderChat();
+  }catch{document.getElementById('temp_loader').innerText='Error Bahi!';}
+};
+
+window.copyMsg=(idx)=>{navigator.clipboard.writeText(document.querySelectorAll('.ai-msg .content')[idx].innerText);alert('Copied!');};
+window.downloadWord=(idx)=>{
+  const content=document.querySelectorAll('.ai-msg .content')[idx].innerHTML;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff','<html><body style="font-family:Arial">'+content+'</body></html>'],{type:'application/msword'}));a.download='summary.doc';a.click();
+};
+document.getElementById('aiBrainInp').onkeydown=e=>{if(e.key==='Enter')askBrain();};
+renderChat();
+
+// =====================================================================
+// THEME MODE
+// =====================================================================
+(()=>{
+  const MODES = { white:'', gray:'mode-gray', dark:'mode-dark' };
+  function applyMode(mode) {
+    document.body.classList.remove('mode-gray','mode-dark');
+    if(MODES[mode]) document.body.classList.add(MODES[mode]);
+    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.toggle('active-mode', btn.dataset.mode === mode));
+    localStorage.setItem('onepilot_mode', mode);
+  }
+  document.querySelectorAll('.mode-btn').forEach(btn => btn.onclick = () => applyMode(btn.dataset.mode));
+  applyMode(localStorage.getItem('onepilot_mode') || 'white');
+})();
+
+// =====================================================================
+// LIVE CLOCK
+// =====================================================================
+(function() {
+  function updateClock() {
+    var now = new Date();
+    var h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    var time = (h<10?'0':'')+h + ':' + (m<10?'0':'')+m + ':' + (s<10?'0':'')+s + ' ' + ampm;
+    var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var date = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+    var te = document.getElementById('clockTime');
+    var de = document.getElementById('clockDate');
+    if(te) te.textContent = time;
+    if(de) de.textContent = date;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+})();
+
+// =====================================================================
+// CALCULATOR
+// =====================================================================
+var _calcExpr = '';
+var _calcOpen = false;
+
+window.toggleCalc = function() {
+  _calcOpen = !_calcOpen;
+  var p = document.getElementById('calcPanel');
+  p.style.display = _calcOpen ? 'block' : 'none';
+  if(_calcOpen) { p.style.animation = 'none'; p.offsetHeight; p.style.animation = ''; }
+};
+
+window.calcInput = function(v) {
+  if(_calcExpr === 'Error') _calcExpr = '';
+  _calcExpr += v;
+  document.getElementById('calcExpr').textContent = _calcExpr.replace(/\*/g,'×').replace(/\//g,'÷');
+  try {
+    var r = Function('"use strict"; return (' + _calcExpr.replace(/%/g,'/100') + ')')();
+    if(isFinite(r)) document.getElementById('calcResult').textContent = parseFloat(r.toFixed(10)).toString();
+  } catch(e) {}
+};
+
+window.calcClear = function() {
+  _calcExpr = '';
+  document.getElementById('calcExpr').textContent = '';
+  document.getElementById('calcResult').textContent = '0';
+};
+
+window.calcBack = function() {
+  _calcExpr = _calcExpr.slice(0,-1);
+  document.getElementById('calcExpr').textContent = _calcExpr.replace(/\*/g,'×').replace(/\//g,'÷');
+  if(!_calcExpr) document.getElementById('calcResult').textContent = '0';
+  else {
+    try {
+      var r = Function('"use strict"; return (' + _calcExpr.replace(/%/g,'/100') + ')')();
+      if(isFinite(r)) document.getElementById('calcResult').textContent = parseFloat(r.toFixed(10)).toString();
+    } catch(e) {}
+  }
+};
+
+window.calcSqrt = function() {
+  try {
+    var cur = Function('"use strict"; return (' + (_calcExpr||'0').replace(/%/g,'/100') + ')')();
+    var r = Math.sqrt(cur);
+    document.getElementById('calcExpr').textContent = '√(' + _calcExpr + ')';
+    document.getElementById('calcResult').textContent = parseFloat(r.toFixed(10)).toString();
+    _calcExpr = parseFloat(r.toFixed(10)).toString();
+  } catch(e) {
+    document.getElementById('calcResult').textContent = 'Error';
+    _calcExpr = '';
+  }
+};
+
+window.calcEquals = function() {
+  try {
+    var r = Function('"use strict"; return (' + _calcExpr.replace(/%/g,'/100') + ')')();
+    if(!isFinite(r)) throw new Error();
+    r = parseFloat(r.toFixed(10)).toString();
+    document.getElementById('calcExpr').textContent = _calcExpr.replace(/\*/g,'×').replace(/\//g,'÷') + ' =';
+    document.getElementById('calcResult').textContent = r;
+    _calcExpr = r;
+  } catch(e) {
+    document.getElementById('calcResult').textContent = 'Error';
+    _calcExpr = '';
+  }
+};
+
+document.addEventListener('click', function(e) {
+  if(_calcOpen && !e.target.closest('#calcPanel') && !e.target.closest('#calcFab')) {
+    _calcOpen = false;
+    document.getElementById('calcPanel').style.display = 'none';
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  var p = document.getElementById('calcPanel');
+  var isInInput = document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA';
+  if(p.style.display !== 'none' && !isInInput) {
+    if((e.key >= '0' && e.key <= '9') || e.key === '.' || e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/' || e.key === '%') {
+      e.preventDefault(); calcInput(e.key);
+    }
+    if(e.key === 'Enter') { e.preventDefault(); calcEquals(); }
+    if(e.key === 'Backspace') { e.preventDefault(); calcBack(); }
+    if(e.key === 'Escape') { toggleCalc(); }
+  }
+});
+</script>
+</body>
+</html>
